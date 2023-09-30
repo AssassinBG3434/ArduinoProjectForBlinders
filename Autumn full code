@@ -1,0 +1,141 @@
+const unsigned long interval = 300;
+const unsigned long waitTime = 1350000;//1350000 ==> 20minute todo
+const unsigned long wait10Min = 600000; // ==> 10 min
+const unsigned long waitTimeNine = 28080000;//==> 7 hours && 48 minutes
+const unsigned long waitTimeThree = 6960000;//10680000;//==> 1 hours 56 minutes
+const unsigned long waitTimeThree2 = 14400000;//10800000;//==> 4 hours
+unsigned long previousTime = 0;
+unsigned long previousTimeNine = 0;
+unsigned long previousTimeThree = 0;
+unsigned long currTimeThree=0;
+int addMinutes = 0;
+int relay2 = 10;
+int relay = 8;
+int isItTrue = 0;
+int countFrontwards=0;
+int countBackwards=0;
+int countDay = 0;
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);     
+  pinMode(relay2,OUTPUT);
+  pinMode(relay,OUTPUT);
+  digitalWrite(relay,LOW);
+  digitalWrite(relay2,LOW);
+  
+}
+
+
+void loop() 
+{
+  unsigned long currTimeNine = millis();
+  if ( currTimeNine - previousTimeNine >= waitTimeNine )
+  {
+    addMinutes = addMinutes+120000;
+    unsigned long currWait10Min=0;
+    unsigned long previousWait10Min=0;
+    int i = 0;
+    while (i<6){
+      
+      currWait10Min = millis();
+      if (currWait10Min - previousWait10Min >= wait10Min){
+        digitalWrite(relay2,HIGH);
+        delay(200);
+        digitalWrite(relay2,LOW);
+        previousWait10Min = currWait10Min;
+        i++;
+      }
+      
+    }
+    unsigned long currTime = millis();
+
+    while(countFrontwards<26)
+    {
+      currTime = millis();
+
+      if (currTime - previousTime >= waitTime) 
+      {
+         /* Event code */
+        if ( countFrontwards == 3 || countFrontwards == 4 || countFrontwards == 5 || countFrontwards == 6 ){
+          digitalWrite(relay,HIGH);
+          delay(200);
+          digitalWrite(relay,LOW);
+
+        }else if(countFrontwards == 23){
+          delay(360000);
+
+        }else if (countFrontwards == 25){
+          for (int i = 0 ; i < 4 ;i++){
+            digitalWrite(relay2,HIGH);
+            delay(200);
+            digitalWrite(relay2,LOW);
+            delay(2000);
+          }
+          break;
+          countFrontwards+=2;
+        }else{
+          digitalWrite(relay2,HIGH);
+          Serial.print("Vurti se napred: ");
+          Serial.println(countFrontwards);
+          delay(200);
+          digitalWrite(relay2,LOW);
+        }
+        countFrontwards++; 
+        
+        /* Update the timing for the next time around */
+        previousTime = currTime;
+      }
+    }
+    delay(10000);
+    previousTime=0;
+    while(countBackwards<26)
+    {
+      currTime = millis();
+
+      if (currTime - previousTime >= 10000) 
+      {
+        countBackwards++;
+        /* Event code */
+        if(countBackwards!=12)
+        {
+          digitalWrite(relay,HIGH);
+          Serial.print("Vurti se nazad: ");
+          Serial.println(countBackwards);
+          delay(200);
+          digitalWrite(relay,LOW);
+        }else
+        {
+          digitalWrite(relay,HIGH);
+          delay(200);
+          digitalWrite(relay,LOW);
+          unsigned long currTimeThree = millis();
+          previousTimeThree = millis();
+          while (true){
+            currTimeThree = millis();
+            if (currTimeThree - previousTimeThree >= waitTimeThree2+addMinutes){
+              break;
+            }
+          } 
+          //delay(10800000);//10800000
+        }
+
+        /* Update the timing for the next time around */
+        previousTime = currTime;
+      }
+    }
+    countFrontwards=0;
+    countBackwards=0;
+    currTimeThree = millis();
+    previousTimeThree = millis();
+    while (true){
+      currTimeThree = millis();
+       if (currTimeThree - previousTimeThree >= waitTimeThree-addMinutes){
+         break;
+       }
+    }
+    //delay(10800000);//10800000   -270 000 bc of 4:30 minutes
+   countDay++;
+   previousTimeNine = millis();
+   Serial.println(countDay);
+  }
+}
